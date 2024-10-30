@@ -20,11 +20,20 @@ RUN echo '#!/bin/bash
 set -e
 
 # Check if required environment variables are set
-if [ -z "$MONGODB_URI" ] || [ -z "$S3_BUCKET_URL" ]; then
+if [ -z "$MONGODB_URI" ] || [ -z "$S3_BUCKET_URL" ] || [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
     echo "Error: Required environment variables not set"
-    echo "Please set MONGODB_URI and S3_BUCKET_URL"
+    echo "Please set:"
+    echo "- MONGODB_URI"
+    echo "- S3_BUCKET_URL"
+    echo "- AWS_ACCESS_KEY_ID"
+    echo "- AWS_SECRET_ACCESS_KEY"
     exit 1
 fi
+
+# Configure AWS credentials
+export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+export AWS_DEFAULT_REGION=fr-par
 
 echo "Starting MongoDB restore process..."
 
@@ -35,7 +44,7 @@ check_database() {
     if [ -z "$DB_NAME" ]; then
         echo "Error: Could not extract database name from URI"
         exit 1
-    }
+    fi
 
     echo "Checking if database $DB_NAME has existing data..."
     
@@ -74,7 +83,7 @@ cd $TEMP_DIR
 
 # Download the dump file from S3
 echo "Downloading dump from S3..."
-wget "$S3_BUCKET_URL/soliguide_db.gzip"
+aws s3 cp "$S3_BUCKET_URL/soliguide_db.gzip" ./soliguide_db.gzip
 
 # Unzip the dump file
 echo "Unzipping dump file..."

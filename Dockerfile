@@ -14,9 +14,9 @@ RUN pip3 install awscli
 WORKDIR /scripts
 
 # Create the restore script
-RUN echo '#!/bin/bash
+COPY <<EOF /scripts/restore.sh
+#!/bin/bash
 
-# Exit on error
 set -e
 
 # Check if required environment variables are set
@@ -40,7 +40,7 @@ echo "Starting MongoDB restore process..."
 # Function to check if database is empty
 check_database() {
     # Extract database name from URI
-    DB_NAME=$(echo $MONGODB_URI | awk -F "/" '"'"'{print $NF}'"'"' | awk -F "?" '"'"'{print $1}'"'"')
+    DB_NAME=$(echo $MONGODB_URI | awk -F "/" '{print $NF}' | awk -F "?" '{print $1}')
     if [ -z "$DB_NAME" ]; then
         echo "Error: Could not extract database name from URI"
         exit 1
@@ -49,11 +49,11 @@ check_database() {
     echo "Checking if database $DB_NAME has existing data..."
     
     # Count total documents in all collections
-    DOC_COUNT=$(mongosh "$MONGODB_URI" --quiet --eval '"'"'
+    DOC_COUNT=$(mongosh "$MONGODB_URI" --quiet --eval '
         db.getCollectionNames().reduce((total, collName) => {
             return total + db.getCollection(collName).countDocuments();
         }, 0)
-    '"'"')
+    ')
 
     if [ "$DOC_COUNT" -gt 0 ]; then
         return 1  # Database has data
@@ -98,7 +98,8 @@ echo "Cleaning up temporary files..."
 cd /
 rm -rf $TEMP_DIR
 
-echo "Database restore completed successfully!"' > /scripts/restore.sh
+echo "Database restore completed successfully!"
+EOF
 
 # Make the script executable
 RUN chmod +x /scripts/restore.sh

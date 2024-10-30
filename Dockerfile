@@ -13,8 +13,9 @@ RUN apt-get update && apt-get install -y \
 # Install AWS CLI for S3 access using the --break-system-packages flag
 RUN pip3 install --break-system-packages awscli
 
-# Set AWS Region
+# Set AWS Region and default backup filename
 ENV AWS_DEFAULT_REGION=fr-par
+ENV BACKUP_FILENAME=soliguide_db.gzip
 
 # Create script directory
 WORKDIR /scripts
@@ -88,15 +89,18 @@ cd $TEMP_DIR
 
 # Download the dump file from S3
 echo "Downloading dump from S3..."
-aws s3 cp "$S3_BUCKET_URL/soliguide_db.gzip" ./soliguide_db.gzip
+aws s3 cp "$S3_BUCKET_URL/$BACKUP_FILENAME" ./$BACKUP_FILENAME
 
 # Unzip the dump file
 echo "Unzipping dump file..."
-gunzip soliguide_db.gzip
+gunzip $BACKUP_FILENAME
+
+# Get the filename without .gzip extension for mongorestore
+BACKUP_FILE=\${BACKUP_FILENAME%.gzip}
 
 # Restore the database
 echo "Restoring database..."
-mongorestore --uri="$MONGODB_URI" --gzip --archive=soliguide_db
+mongorestore --uri="$MONGODB_URI" --gzip --archive=$BACKUP_FILE
 
 # Cleanup
 echo "Cleaning up temporary files..."

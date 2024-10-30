@@ -1,5 +1,4 @@
-# Use official MongoDB image as base
-FROM mongo:latest
+FROM mongo:6.0-nanoserver
 
 # Install required tools
 RUN apt-get update && apt-get install -y \
@@ -76,6 +75,7 @@ else
     
     if [ "$FORCE" = "true" ]; then
         echo "FORCE is set to true. Proceeding with restore anyway..."
+        # TODO drop database if "FORCE = true"
     else
         echo "Skipping restore to prevent data loss."
         echo "To force restore over existing data, set FORCE=true"

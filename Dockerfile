@@ -4,11 +4,17 @@ FROM mongo:latest
 # Install required tools
 RUN apt-get update && apt-get install -y \
     wget \
+    python3 \
     python3-pip \
+    python3-setuptools \
+    python3-wheel \
     && rm -rf /var/lib/apt/lists/*
 
-# Install AWS CLI for S3 access
-RUN pip3 install awscli
+# Install AWS CLI for S3 access using the --break-system-packages flag
+RUN pip3 install --break-system-packages awscli
+
+# Set AWS Region
+ENV AWS_DEFAULT_REGION=fr-par
 
 # Create script directory
 WORKDIR /scripts
@@ -33,7 +39,6 @@ fi
 # Configure AWS credentials
 export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
 export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
-export AWS_DEFAULT_REGION=fr-par
 
 echo "Starting MongoDB restore process..."
 

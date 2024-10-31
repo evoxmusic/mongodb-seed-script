@@ -32,6 +32,8 @@ echo "MONGODB_URI=${MONGODB_URI:-(not set)}"
 echo "S3_BUCKET_URL=${S3_BUCKET_URL:-(not set)}"
 echo "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-(not set)}"
 echo "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-(not set)}"
+echo "BACKUP_FILENAME=${BACKUP_FILENAME:-(not set)}"
+echo "AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-(not set)}"
 
 # Check each variable individually for more precise error reporting
 missing_vars=()

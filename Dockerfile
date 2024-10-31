@@ -16,6 +16,7 @@ RUN pip3 install --user awscli
 # Set AWS Region and default backup filename
 ENV AWS_DEFAULT_REGION=fr-par
 ENV BACKUP_FILENAME=soliguide_db.gzip
+ARG MONGODB_URI
 
 # Create script directory
 WORKDIR /scripts

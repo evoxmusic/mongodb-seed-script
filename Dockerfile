@@ -20,22 +20,46 @@ ENV BACKUP_FILENAME=soliguide_db.gzip
 # Create script directory
 WORKDIR /scripts
 
-# Create the restore script
+# Create the restore script with added debugging
 COPY <<EOF /scripts/restore.sh
 #!/bin/bash
 
 set -e
 
-# Check if required environment variables are set
-if [ -z "$MONGODB_URI" ] || [ -z "$S3_BUCKET_URL" ] || [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
-    echo "Error: Required environment variables not set"
-    echo "Please set:"
-    echo "- MONGODB_URI"
-    echo "- S3_BUCKET_URL"
-    echo "- AWS_ACCESS_KEY_ID"
-    echo "- AWS_SECRET_ACCESS_KEY"
+# Debug: Print all relevant environment variables
+echo "Debugging environment variables:"
+echo "MONGODB_URI=${MONGODB_URI:-(not set)}"
+echo "S3_BUCKET_URL=${S3_BUCKET_URL:-(not set)}"
+echo "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-(not set)}"
+echo "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-(not set)}"
+
+# Check each variable individually for more precise error reporting
+missing_vars=()
+
+if [ -z "$MONGODB_URI" ]; then
+    missing_vars+=("MONGODB_URI")
+fi
+
+if [ -z "$S3_BUCKET_URL" ]; then
+    missing_vars+=("S3_BUCKET_URL")
+fi
+
+if [ -z "$AWS_ACCESS_KEY_ID" ]; then
+    missing_vars+=("AWS_ACCESS_KEY_ID")
+fi
+
+if [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
+    missing_vars+=("AWS_SECRET_ACCESS_KEY")
+fi
+
+# If any variables are missing, print them and exit
+if [ \${#missing_vars[@]} -ne 0 ]; then
+    echo "Error: The following required environment variables are not set:"
+    printf '%s\n' "\${missing_vars[@]}"
     exit 1
 fi
+
+echo "All required environment variables are set. Proceeding with restore..."
 
 # Configure AWS credentials
 export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID

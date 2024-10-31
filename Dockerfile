@@ -1,4 +1,4 @@
-FROM mongo:6.0-nanoserver
+FROM mongo:6.0.19
 
 # Install required tools
 RUN apt-get update && apt-get install -y \

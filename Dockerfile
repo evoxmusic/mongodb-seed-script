@@ -9,8 +9,9 @@ RUN apt-get update && apt-get install -y \
     python3-wheel \
     && rm -rf /var/lib/apt/lists/*
 
-# Install AWS CLI for S3 access using the --break-system-packages flag
-RUN pip3 install --break-system-packages awscli
+# Install AWS CLI in user space
+ENV PATH="/root/.local/bin:${PATH}"
+RUN pip3 install --user awscli
 
 # Set AWS Region and default backup filename
 ENV AWS_DEFAULT_REGION=fr-par

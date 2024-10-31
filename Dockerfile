@@ -13,10 +13,12 @@ RUN apt-get update && apt-get install -y \
 ENV PATH="/root/.local/bin:${PATH}"
 RUN pip3 install --user awscli
 
-# Set AWS Region and default backup filename
+ARG MONGODB_URI
+ARG S3_BUCKET_URL
+ARG AWS_ACCESS_KEY_ID
+ARG AWS_SECRET_ACCESS_KEY
 ENV AWS_DEFAULT_REGION=fr-par
 ENV BACKUP_FILENAME=soliguide_db.gzip
-ARG MONGODB_URI
 
 # Create script directory
 WORKDIR /scripts

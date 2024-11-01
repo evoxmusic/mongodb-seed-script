@@ -23,7 +23,7 @@ ENV BACKUP_FILENAME=soliguide_db.gzip
 # Create script directory
 WORKDIR /scripts
 
-# Create the restore script with added debugging
+# Create the restore script with improved URI parsing
 COPY <<EOF /scripts/restore.sh
 #!/bin/bash
 
@@ -74,8 +74,9 @@ echo "Starting MongoDB restore process..."
 
 # Function to check if database is empty
 check_database() {
-    # Extract database name from URI
-    DB_NAME=$(echo $MONGODB_URI | awk -F "/" '{print $NF}' | awk -F "?" '{print $1}')
+    # Extract database name from URI using mongosh
+    DB_NAME=$(mongosh "$MONGODB_URI" --quiet --eval 'db.getName()')
+    
     if [ -z "$DB_NAME" ]; then
         echo "Error: Could not extract database name from URI"
         exit 1

@@ -23,7 +23,7 @@ ENV BACKUP_FILENAME=soliguide_db.gzip
 # Create script directory
 WORKDIR /scripts
 
-# Create the restore script with improved URI parsing
+# Create the restore script with connection verification
 COPY <<EOF /scripts/restore.sh
 #!/bin/bash
 
@@ -72,16 +72,48 @@ export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
 
 echo "Starting MongoDB restore process..."
 
-# Function to check if database is empty
+# Function to wait for MongoDB to be ready
+wait_for_mongodb() {
+    local max_attempts=30
+    local attempt=1
+    local wait_time=5
+
+    echo "Waiting for MongoDB to be ready..."
+    while [ $attempt -le $max_attempts ]; do
+        if mongosh "$MONGODB_URI" --quiet --eval "db.runCommand({ ping: 1 })" >/dev/null 2>&1; then
+            echo "MongoDB is ready!"
+            return 0
+        fi
+        echo "Attempt $attempt/$max_attempts: MongoDB not ready yet, waiting ${wait_time} seconds..."
+        sleep $wait_time
+        attempt=$((attempt + 1))
+    done
+
+    echo "Error: Could not connect to MongoDB after $max_attempts attempts"
+    return 1
+}
+
+# Function to extract database name and verify connection
 check_database() {
-    # Extract database name from URI using mongosh
-    DB_NAME=$(mongosh "$MONGODB_URI" --quiet --eval 'db.getName()')
+    # First ensure MongoDB is available
+    if ! wait_for_mongodb; then
+        echo "Error: Could not establish connection to MongoDB"
+        exit 1
+    fi
+
+    # Extract database name from URI - use sed to handle URI parsing
+    DB_NAME=$(echo "$MONGODB_URI" | sed -n 's|.*://.*/.*/\([^?]*\).*|\1|p')
+    if [ -z "$DB_NAME" ]; then
+        # Try alternative parsing if the first method fails
+        DB_NAME=$(echo "$MONGODB_URI" | sed -n 's|.*://.*\([^/]*\)/\([^?]*\).*|\2|p')
+    fi
     
     if [ -z "$DB_NAME" ]; then
         echo "Error: Could not extract database name from URI"
         exit 1
     fi
 
+    echo "Successfully extracted database name: $DB_NAME"
     echo "Checking if database $DB_NAME has existing data..."
     
     # Count total documents in all collections
@@ -106,7 +138,6 @@ else
     
     if [ "$FORCE" = "true" ]; then
         echo "FORCE is set to true. Proceeding with restore anyway..."
-        # TODO drop database if "FORCE = true"
     else
         echo "Skipping restore to prevent data loss."
         echo "To force restore over existing data, set FORCE=true"
@@ -122,16 +153,9 @@ cd $TEMP_DIR
 echo "Downloading dump from S3..."
 aws s3 cp "$S3_BUCKET_URL/$BACKUP_FILENAME" ./$BACKUP_FILENAME
 
-# Unzip the dump file
-echo "Unzipping dump file..."
-gunzip $BACKUP_FILENAME
-
-# Get the filename without .gzip extension for mongorestore
-BACKUP_FILE=\${BACKUP_FILENAME%.gzip}
-
 # Restore the database
 echo "Restoring database..."
-mongorestore --uri="$MONGODB_URI" --gzip --archive=$BACKUP_FILE
+mongorestore --uri="$MONGODB_URI" --gzip --archive=$BACKUP_FILENAME
 
 # Cleanup
 echo "Cleaning up temporary files..."

@@ -14,6 +14,7 @@ ENV PATH="/root/.local/bin:${PATH}"
 RUN pip3 install --user awscli
 
 ARG MONGODB_URI
+ARG MONGODB_DATABASE
 ARG S3_BUCKET_URL
 ARG AWS_ACCESS_KEY_ID
 ARG AWS_SECRET_ACCESS_KEY
@@ -43,6 +44,10 @@ missing_vars=()
 
 if [ -z "\$MONGODB_URI" ]; then
     missing_vars+=("MONGODB_URI")
+fi
+
+if [ -z "\$MONGODB_DATABASE" ]; then
+    missing_vars+=("MONGODB_DATABASE")
 fi
 
 if [ -z "\$S3_BUCKET_URL" ]; then
@@ -102,17 +107,8 @@ check_database() {
     fi
 
     # Extract database name from URI - use sed to handle URI parsing
-    DB_NAME=\$(echo "\$MONGODB_URI" | sed -n 's|.*://.*/.*/\([^?]*\).*|\1|p')
-    if [ -z "\$DB_NAME" ]; then
-        # Try alternative parsing if the first method fails
-        DB_NAME=\$(echo "\$MONGODB_URI" | sed -n 's|.*://.*\([^/]*\)/\([^?]*\).*|\2|p')
-    fi
+    DB_NAME=\$MONGODB_DATABASE
     
-    if [ -z "\$DB_NAME" ]; then
-        echo "Error: Could not extract database name from URI"
-        exit 1
-    fi
-
     echo "Successfully extracted database name: \$DB_NAME"
     echo "Checking if database \$DB_NAME has existing data..."
     

@@ -147,7 +147,8 @@ cd \$TEMP_DIR
 
 # Download the dump file from S3
 echo "Downloading dump from S3..."
-aws s3 cp "\$S3_BUCKET_URL/\$BACKUP_FILENAME" ./\$BACKUP_FILENAME
+#aws s3 cp "\$S3_BUCKET_URL/\$BACKUP_FILENAME" ./\$BACKUP_FILENAME
+aws s3 cp s3://test-soliguide/soliguide_db.gzip ./soli --endpoint-url https://s3.fr-par.scw.cloud
 
 # Restore the database
 echo "Restoring database..."

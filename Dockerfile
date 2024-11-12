@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y \
 
 # Install AWS CLI in user space
 ENV PATH="/root/.local/bin:${PATH}"
-RUN pip3 install --user awscli
+RUN pip3 install awscli
 
 ARG MONGODB_URI
 ARG MONGODB_DATABASE

@@ -155,7 +155,7 @@ aws s3 cp s3://\$BUCKET_NAME/\$BACKUP_FILENAME ./\$BACKUP_FILENAME --endpoint-ur
 
 # Restore the database
 echo "Restoring database..."
-mongorestore --uri="\$MONGODB_URI" --gzip --archive=\$BACKUP_FILENAME
+mongorestore --drop --uri="\$MONGODB_URI" --gzip --archive=\$BACKUP_FILENAME
 
 # Cleanup
 echo "Cleaning up temporary files..."

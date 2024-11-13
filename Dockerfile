@@ -19,6 +19,8 @@ ARG S3_BUCKET_URL
 ARG AWS_ACCESS_KEY_ID
 ARG AWS_SECRET_ACCESS_KEY
 ENV AWS_DEFAULT_REGION=fr-par
+ENV ENDPOINT_URL=https://s3.fr-par.scw.cloud
+ENV BUCKET_NAME=test-soliguide
 ENV BACKUP_FILENAME=soliguide_db.gzip
 
 # Create script directory
@@ -148,7 +150,7 @@ cd \$TEMP_DIR
 # Download the dump file from S3
 echo "Downloading dump from S3..."
 #aws s3 cp "\$S3_BUCKET_URL/\$BACKUP_FILENAME" ./\$BACKUP_FILENAME
-aws s3 cp s3://test-soliguide/soliguide_db.gzip ./soliguide_db.gzip --endpoint-url https://s3.fr-par.scw.cloud
+aws s3 cp s3://\$BUCKET_NAME/\$BACKUP_FILENAME ./\$BACKUP_FILENAME --endpoint-url \$ENDPOINT_URL
 
 # Restore the database
 echo "Restoring database..."
